@@ -3,17 +3,19 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 entity GENERAL is
     Port (
-        CLK      : in  STD_LOGIC;                     -- Reloj de 100 MHz
-        RESET    : in  STD_LOGIC;                     -- Reset activo en alto
-        RX       : in  STD_LOGIC;                     -- Entrada UART
-		
-		  PWM_DC	  : out STD_LOGIC;
-		  SERVO	  : out STD_LOGIC;
-		  BOMBA	  : out STD_LOGIC;
-		  BOCINA	  : out STD_LOGIC;
-		  
-	       TEST_RECIBIDO : out STD_LOGIC_VECTOR(7 DOWNTO 0)
-	       
+            CLK      : in  STD_LOGIC;                     -- Reloj de 100 MHz
+            RESET    : in  STD_LOGIC;                     -- Reset activo en alto
+            RX       : in  STD_LOGIC;                     -- Entrada UART
+		    PWM_DC  : out STD_LOGIC;
+		    SERVO	  : out STD_LOGIC;
+		    BOMBA     : out STD_LOGIC;
+		    BOMBA_LED	  : out STD_LOGIC;
+		    BOCINA   : out STD_LOGIC;   
+		    BOCINA_LED  : out STD_LOGIC;
+		    X1      : out STD_LOGIC;                     -- Dirección
+            X2      : out STD_LOGIC;
+            X1_LED  : out STD_LOGIC;
+            X2_LED  : out STD_LOGIC  
     );
 end GENERAL;
 
@@ -26,10 +28,12 @@ architecture RTL of GENERAL is
 
     signal recibido_uart : STD_LOGIC_VECTOR(7 downto 0);
     signal carga_uart    : STD_LOGIC;
-	 signal CANAL_0  : STD_LOGIC_VECTOR(7 downto 0);
+	signal CANAL_0  : STD_LOGIC_VECTOR(7 downto 0);
     signal CANAL_1  : STD_LOGIC_VECTOR(7 downto 0);
     signal CANAL_2  : STD_LOGIC_VECTOR(7 downto 0);
     signal CANAL_3  : STD_LOGIC_VECTOR(7 downto 0);
+    signal X1_s     : STD_LOGIC;
+    signal X2_s     : STD_LOGIC;
 	 
 begin
 
@@ -62,17 +66,31 @@ begin
             CANAL_0  => CANAL_0,
             CANAL_1  => CANAL_1,
             CANAL_2  => CANAL_2,
-            CANAL_3  => TEST_RECIBIDO
+            CANAL_3  => CANAL_3
         );
+	   --ASIGNACIONES DIRECTAS:
+        BOMBA <= CANAL_3(0);
+        BOMBA_LED <= CANAL_3(0);
+        BOCINA <= CANAL_2(0);
+        BOCINA_LED <= CANAL_2(0);
+	 
 		  
-		  
-	CONTROLADOR_MOTOR : entity work.MOTOR_DC
+CONTROLADOR_MOTOR : entity work.MOTOR_DC
     port map (
 				CLK    => CLK,              
 				VALOR  => CANAL_0,
-				PWM_DC => PWM_DC
+				PWM_DC => PWM_DC,
+				X1 => X1_s,    
+                X2 => X2_s
     );
-	 
+     --ASIGNACIONES DIRECTAS:
+     X1 <= X1_s;
+     X1_LED <= X1_s;
+     
+     X2 <= X2_s;
+     X2_LED <= X2_s;
+     
+    
 	 CONTROLADOR_SERVO : entity work.SERVO_PWM
     port map (
         CLK   => CLK, 
@@ -80,16 +98,7 @@ begin
         SERVO  => SERVO 
     );
 
-	 AUDIO_CONT : entity work.COMPARADOR_1
-    port map (
-        VALOR => CANAL_2, 
-        SALIDA => BOCINA
-    );
 	 
-	 BOMBA_CONT : entity work.COMPARADOR_1
-    port map (
-        VALOR => CANAL_3, 
-        SALIDA => BOMBA
-    );	 
-	 
+	
+
 end RTL;
